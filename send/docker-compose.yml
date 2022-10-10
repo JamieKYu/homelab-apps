@@ -1,0 +1,54 @@
+version: "3"
+networks:
+  default:
+    name: ${NETWORK_NAME}
+    external: ${NETWORK_IS_EXTERNAL}
+services:
+  redis:
+    image: "redis:alpine"
+    container_name: "send-redis"
+    restart: "unless-stopped"
+    volumes:
+      - "${VOLUME_ROOT}/send/redis:/data"
+    labels:
+      - "com.centurylinklabs.watchtower.enable=${LABEL_WATCHTOWER_ENABLE}"
+  send:
+    image: "registry.gitlab.com/timvisee/send:latest"
+    container_name: "send"
+    user: "root"
+    restart: "unless-stopped"
+    ports:
+      - "${PORT_HTTP}:1234"
+    volumes:
+      - "${VOLUME_ROOT}/send/uploads:/uploads"
+    environment:
+      - "VIRTUAL_HOST=${HOST_IP}"
+      - "VIRTUAL_PORT=${PORT_HTTP}"
+      - "DHPARAM_GENERATION=false"
+      - "NODE_ENV=development"
+      - "BASE_URL=${BASE_URL}"
+      - "PORT=1234"
+      - "REDIS_HOST=send-redis"
+
+      # For local uploads storage
+      - "FILE_DIR=/uploads"
+
+      # For S3 object storage (disable volume and FILE_DIR variable)
+      # - AWS_ACCESS_KEY_ID=********
+      # - AWS_SECRET_ACCESS_KEY=********
+      # - S3_BUCKET=send
+      # - S3_ENDPOINT=s3.us-west-2.amazonaws.com
+      # - S3_USE_PATH_STYLE_ENDPOINT=true
+
+      # To customize upload limits
+      - "MAX_EXPIRE_SECONDS=31536000"
+      - "MAX_DOWNLOADS=1000"
+      - "MAX_FILE_SIZE=2684354560"
+      - "DOWNLOAD_COUNTS=1,2,5,10,25,50,1000"
+      - "EXPIRE_TIMES_SECONDS=3600,86400,604800,2592000,31536000"
+      - "DEFAULT_DOWNLOADS=5"
+      - "DEFAULT_EXPIRE_SECONDS=604800"
+      - "CUSTOM_FOOTER_TEXT=just a minor interruption... everyone knows you'll understand"
+      - "CUSTOM_FOOTER_URL=https://jamiekyu.com"
+    labels:
+      - "com.centurylinklabs.watchtower.enable=${LABEL_WATCHTOWER_ENABLE}"

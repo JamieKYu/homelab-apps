@@ -1,0 +1,16 @@
+version: "3.7"
+services:
+  homeassistant:
+    image: "ghcr.io/home-assistant/home-assistant:stable"
+    container_name: "homeassistant"
+    volumes:
+      - "${VOLUME_ROOT}/homeassistant/config:/config"
+      - "/etc/localtime:/etc/localtime:ro"
+    restart: "unless-stopped"
+    privileged: "true"
+    network_mode: "host"
+    devices:
+      - "/dev/ttyUSB0:/dev/ttyUSB0"
+      - "/dev/ttyUSB1:/dev/ttyUSB1"
+    labels:
+      - "com.centurylinklabs.watchtower.enable=${LABEL_WATCHTOWER_ENABLE}"

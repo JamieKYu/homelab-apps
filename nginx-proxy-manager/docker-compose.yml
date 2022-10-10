@@ -1,0 +1,19 @@
+version: "3"
+networks:
+  default:
+    name: ${NETWORK_NAME}
+    external: ${NETWORK_IS_EXTERNAL}
+services:
+  app:
+    image: "jc21/nginx-proxy-manager"
+    container_name: "nginx-proxy-manager"
+    restart: "unless-stopped"
+    ports:
+      - "${PORT_HTTP:-80}:80"
+      - "${PORT_ADMIN}:81"
+      - "${PORT_HTTPS:-443}:443"
+    volumes:
+      - "${VOLUME_ROOT}/nginx-proxy-manager/data:/data"
+      - "${VOLUME_ROOT}/nginx-proxy-manager/letsencrypt:/etc/letsencrypt"
+    labels:
+      - "com.centurylinklabs.watchtower.enable=${LABEL_WATCHTOWER_ENABLE}"

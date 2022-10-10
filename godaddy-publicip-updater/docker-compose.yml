@@ -1,0 +1,12 @@
+version: "2.1"
+services:
+  godaddy-publicip-updater:
+    image: "jwater7/godaddy-publicip-updater"
+    container_name: "godaddy-publicip-updater"
+    environment:
+      - "GODADDY_API_KEY=${GODADDY_API_KEY}"
+      - "GODADDY_API_SECRET=${GODADDY_API_SECRET}"
+      - "GODADDY_DOMAINS=${GODADDY_DOMAINS}"
+    restart: "unless-stopped"
+    labels:
+      - "com.centurylinklabs.watchtower.enable=${LABEL_WATCHTOWER_ENABLE}"

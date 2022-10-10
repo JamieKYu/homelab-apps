@@ -1,0 +1,39 @@
+version: "3"
+networks:
+  default:
+    name: ${NETWORK_NAME}
+    external: ${NETWORK_IS_EXTERNAL}
+services:
+  ghost:
+    image: "ghost"
+    container_name: "ghost"
+    restart: "unless-stopped"
+    ports:
+      - "${PORT_HTTP}:2368"
+    depends_on:
+      - "ghost-mysql"
+    environment:
+      url: "${SITE_URL}"
+      database__client: "mysql"
+      database__connection__host: "ghost-mysql"
+      database__connection__user: "${DATABASE_USER}"
+      database__connection__password: "${DATABASE_ROOT_PASSWORD}"
+      database__connection__database: "${DATABASE_NAME}"
+      NODE_ENV: "${NODE_ENV}"
+    volumes:
+      - "${VOLUME_ROOT}/ghost/content:/var/lib/ghost/content"
+      - "${VOLUME_ROOT}/ghost/config/config.production.json:/var/lib/ghost/config.production.json"
+      - "${VOLUME_ROOT}/ghost/config/config.development.json:/var/lib/ghost/config.development.json"
+    labels:
+      - "com.centurylinklabs.watchtower.enable=${LABEL_WATCHTOWER_ENABLE}"
+  ghost-mysql:
+    image: "mysql"
+    container_name: "ghost-mysql"
+    restart: "unless-stopped"
+    environment:
+      MYSQL_DATABASE: ${DATABASE_NAME}
+      MYSQL_ROOT_PASSWORD: "${DATABASE_ROOT_PASSWORD}"
+    volumes:
+      - "${VOLUME_ROOT}/ghost/mysql:/var/lib/mysql"
+    labels:
+      - "com.centurylinklabs.watchtower.enable=${LABEL_WATCHTOWER_ENABLE}"

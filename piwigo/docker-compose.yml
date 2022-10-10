@@ -1,0 +1,44 @@
+version: "3.3"
+networks:
+  default:
+    name: ${NETWORK_NAME}
+    external: ${NETWORK_IS_EXTERNAL}
+services:
+  piwigo-mysql:
+    image: "mysql"
+    container_name: "piwigo-mysql"
+    restart: "unless-stopped"
+    environment:
+      MYSQL_DATABASE: "${PIWIGO_DATABASE_NAME}"
+      MYSQL_USER: "${PIWIGO_DATABASE_USER}"
+      MYSQL_PASSWORD: "${PIWIGO_DATABASE_PASSWORD}"
+      MYSQL_ROOT_PASSWORD: "${PIWIGO_DATABASE_ROOT_PASSWORD}"
+    volumes:
+      - "${VOLUME_ROOT}/piwigo/mysql:/var/lib/mysql"
+    labels:
+      - "com.centurylinklabs.watchtower.enable=${LABEL_WATCHTOWER_ENABLE}"
+  piwigo:
+    image: "linuxserver/piwigo"
+    container_name: "piwigo"
+    restart: "unless-stopped"
+    privileged: true
+    environment:
+      - "PUID=${PIWIGO_PUID}"
+      - "PGID=${PIWIGO_PGID}"
+      - "TZ=America/Los_Angeles"
+    ports:
+      - "${PORT_HTTP}:80"
+    links:
+      - "piwigo-mysql"
+    depends_on:
+      - "piwigo-mysql"
+    volumes:
+      - "${VOLUME_ROOT}/piwigo/config:/config"
+      - "${VOLUME_ROOT}/piwigo/gallery:/gallery"
+    # deploy:
+    #     resources:
+    #         limits:
+    #           cpus: 1.00
+    #           memory: 1024M
+    labels:
+      - "com.centurylinklabs.watchtower.enable=${LABEL_WATCHTOWER_ENABLE}"

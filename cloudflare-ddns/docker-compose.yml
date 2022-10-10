@@ -1,0 +1,22 @@
+version: "3.7"
+services:
+  cloudflare-ddns-1:
+    image: "oznu/cloudflare-ddns"
+    container_name: "cloudflare-ddns-1"
+    environment:
+      - "ZONE=${ENVIRONMENT_ZONE1}"
+      - "API_KEY=${ENVIRONMENT_API_KEY}"
+      - "PROXIED=${ENVIRONMENT_PROXIED}"
+    restart: "unless-stopped"
+    labels:
+      - "com.centurylinklabs.watchtower.enable=${LABEL_WATCHTOWER_ENABLE}"
+  cloudflare-ddns-2:
+    image: "oznu/cloudflare-ddns"
+    container_name: "cloudflare-ddns-2"
+    environment:
+      - "ZONE=${ENVIRONMENT_ZONE2}"
+      - "API_KEY=${ENVIRONMENT_API_KEY}"
+      - "PROXIED=${ENVIRONMENT_PROXIED}"
+    restart: "unless-stopped"
+    labels:
+      - "com.centurylinklabs.watchtower.enable=${LABEL_WATCHTOWER_ENABLE}"

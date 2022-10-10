@@ -1,0 +1,21 @@
+version: "2.1"
+services:
+  transmission:
+    image: "linuxserver/transmission"
+    container_name: "transmission"
+    environment:
+      - "PUID=0"
+      - "PGID=0"
+      - "TZ=America/Los_Angeles"
+    volumes:
+      - "${VOLUME_ROOT}/Transmission/Config:/config"
+      - "${VOLUME_ROOT}/Transmission/Downloads:/downloads"
+      - "${VOLUME_ROOT}/Transmission/Watch:/watch"
+    ports:
+      - "${PORT_WEB}:9091"
+      - "51413:51413"
+      - "51413:51413/udp"
+    restart: "unless-stopped"
+    labels:
+      - "com.centurylinklabs.watchtower.enable=${LABEL_WATCHTOWER_ENABLE}"
+

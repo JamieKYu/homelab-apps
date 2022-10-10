@@ -1,0 +1,41 @@
+version: "3.3"
+networks:
+  default:
+    name: ${NETWORK_NAME}
+    external: ${NETWORK_IS_EXTERNAL}
+services:
+  wordpress-mysql:
+    image: "mysql"
+    container_name: "${MYSQL_CONTAINER_NAME}"
+    restart: "unless-stopped"
+    environment:
+      MYSQL_DATABASE: "${MYSQL_DATABASE}"
+      MYSQL_USER: "${MYSQL_USER}"
+      MYSQL_PASSWORD: "${MYSQL_PASSWORD}"
+      MYSQL_ROOT_PASSWORD: "${MYSQL_ROOT_PASSWORD}"
+    volumes:
+      - "${VOLUME_ROOT}/wordpress/mysql:/var/lib/mysql"
+    labels:
+      - "com.centurylinklabs.watchtower.enable=${LABEL_WATCHTOWER_ENABLE}"
+  wordpress:
+    depends_on:
+      - "wordpress-mysql"
+    links:
+      - "wordpress-mysql"
+    image: "wordpress"
+    container_name: "${WORDPRESS_CONTAINER_NAME}"
+    restart: "unless-stopped"
+    ports:
+      - "${PORT_HTTP}:80"
+    environment:
+      WORDPRESS_DB_HOST: "${MYSQL_CONTAINER_NAME}:3306"
+      WORDPRESS_DB_USER: "${MYSQL_USER}"
+      WORDPRESS_DB_PASSWORD: "${MYSQL_PASSWORD}"
+      WORDPRESS_DB_NAME: "${MYSQL_DATABASE}"
+      WORDPRESS_FORCE_SSL_ADMIN: "${WORDPRESS_FORCE_SSL_ADMIN}"
+      WORDPRESS_WP_HOME: "${WORDPRESS_WP_HOME}"
+      WORDPRESS_WP_SITEURL: "${WORDPRESS_WP_SITEURL}"
+    volumes:
+      - "${VOLUME_ROOT}/wordpress:/var/www/html"
+    labels:
+      - "com.centurylinklabs.watchtower.enable=${LABEL_WATCHTOWER_ENABLE}"
