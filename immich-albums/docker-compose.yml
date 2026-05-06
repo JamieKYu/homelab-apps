@@ -1,0 +1,15 @@
+version: "3.8"
+
+services:
+  immich-albums:
+    image: jamiekyu/immich-albums
+    container_name: immich-albums
+    restart: unless-stopped
+    ports:
+      - "${PORT_IMMICH_ALBUMS}:3000"
+    environment:
+      - IMMICH_URL=${IMMICH_URL}
+      - IMMICH_API_KEY=${IMMICH_API_KEY}
+      - TZ=${TIMEZONE}
+    labels:
+      - "com.centurylinklabs.watchtower.enable=${LABEL_WATCHTOWER_ENABLE}"

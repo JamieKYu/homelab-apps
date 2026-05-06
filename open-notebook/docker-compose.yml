@@ -1,0 +1,26 @@
+version: "3.8"
+
+services:
+  open-notebook:
+    image: lfnovo/open_notebook:v1-latest-single
+    container_name: open-notebook
+    restart: unless-stopped
+    ports:
+      - "${PORT_OPEN_NOTEBOOK_FRONTEND:-8502}:8502"  # Frontend
+      - "${PORT_OPEN_NOTEBOOK_API:-5055}:5055"       # API
+    environment:
+      - API_URL=https://notebook.jamiekyu.com
+      - OLLAMA_API_BASE=http://host.docker.internal:${PORT_OLLAMA:-11434}
+      - OPEN_NOTEBOOK_PASSWORD=${OPEN_NOTEBOOK_PASSWORD}
+      - SURREAL_URL=${SURREAL_URL:-ws://localhost:8000/rpc}
+      - SURREAL_USER=${SURREAL_USER:-root}
+      - SURREAL_PASSWORD=${SURREAL_PASSWORD:-root}
+      - SURREAL_NAMESPACE=${SURREAL_NAMESPACE:-open_notebook}
+      - SURREAL_DATABASE=${SURREAL_DATABASE:-production}
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    volumes:
+      - ${VOLUME_ROOT}/open-notebook/data:/app/data
+      - ${VOLUME_ROOT}/open-notebook/surreal:/mydata
+    labels:
+      - "com.centurylinklabs.watchtower.enable=${LABEL_WATCHTOWER_ENABLE}"

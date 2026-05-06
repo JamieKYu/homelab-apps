@@ -1,0 +1,42 @@
+version: "3.8"
+
+services:
+  tandoor:
+    image: vabene1111/recipes:latest
+    container_name: tandoor
+    restart: unless-stopped
+    ports:
+      - "${PORT_TANDOOR}:80"
+    volumes:
+      - ${VOLUME_ROOT}/tandoor/static:/opt/recipes/staticfiles
+      - ${VOLUME_ROOT}/tandoor/media:/opt/recipes/mediafiles
+    environment:
+      - DB_ENGINE=django.db.backends.postgresql
+      - POSTGRES_HOST=${DB_HOST}
+      - POSTGRES_PORT=5432
+      - POSTGRES_USER=${DB_USER}
+      - POSTGRES_PASSWORD=${DB_PASSWORD}
+      - POSTGRES_DB=${DB_NAME}
+      - SECRET_KEY=${SECRET_KEY}
+      - BASE_URL=${BASE_URL}
+      - MEDIA_URL=/media/
+      - MEDIA_ROOT=/opt/recipes/mediafiles
+      - ALLOWED_HOSTS=*
+      - DEBUG=0
+    depends_on:
+      - tandoor_db
+    labels:
+      - "com.centurylinklabs.watchtower.enable=${LABEL_WATCHTOWER_ENABLE}"
+
+  tandoor_db:
+    image: postgres:16
+    container_name: tandoor_db
+    restart: unless-stopped
+    environment:
+      - POSTGRES_USER=${DB_USER}
+      - POSTGRES_PASSWORD=${DB_PASSWORD}
+      - POSTGRES_DB=${DB_NAME}
+    volumes:
+      - ${VOLUME_ROOT}/tandoor/postgres:/var/lib/postgresql/data
+    labels:
+      - "com.centurylinklabs.watchtower.enable=${LABEL_WATCHTOWER_ENABLE}"

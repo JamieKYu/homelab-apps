@@ -1,0 +1,24 @@
+# From https://github.com/nextcloud/all-in-one/blob/main/docker-compose.yml
+
+version: "3.8"
+volumes:
+  nextcloud_aio_mastercontainer:
+    name: "nextcloud_aio_mastercontainer" # This line is not allowed to be changed
+services:
+  nextcloud:
+    image: "nextcloud/all-in-one:latest${ARCH_TYPE}" # Must be changed to 'nextcloud/all-in-one:latest-arm64' when used with an arm64 CPU
+    restart: "unless-stopped"
+    container_name: "nextcloud-aio-mastercontainer" # This line is not allowed to be changed
+    volumes:
+      - "nextcloud_aio_mastercontainer:/mnt/docker-aio-config" # This line is not allowed to be changed
+      - "/var/run/docker.sock:/var/run/docker.sock:ro" # May be changed on macOS, Windows or docker rootless. See the applicable documentation
+    ports:
+      - ${PORT_HTTP}:8080
+    environment: # Is needed when using any of the options below
+      - "APACHE_PORT=11000" # Is needed when running behind a reverse proxy. See https://github.com/nextcloud/all-in-one/blob/main/reverse-proxy.md
+      - "APACHE_DISABLE_REWRITE_IP=1"
+      - "NEXTCLOUD_TRUSTED_DOMAINS=${DOMAIN_NAME} ${HOST_IP}"
+      - "TRUSTED_PROXIES=${HOST_IP}"
+      - "NEXTCLOUD_DATADIR=${VOLUME_ROOT}/nextcloud/data"
+    labels:
+      - "com.centurylinklabs.watchtower.enable=${LABEL_WATCHTOWER_ENABLE}"

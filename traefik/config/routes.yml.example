@@ -1,0 +1,78 @@
+http:
+  routers:
+    # Example: route a host to a backend service
+    example:
+      rule: "Host(`example.com`) || Host(`www.example.com`)"
+      entryPoints:
+        - websecure
+      service: example
+      tls:
+        certResolver: letsencrypt
+
+    # Example: path-based routing on the same host
+    example-api:
+      rule: "Host(`example.com`) && PathPrefix(`/api/`)"
+      entryPoints:
+        - websecure
+      service: example-api
+      priority: 10
+      tls:
+        certResolver: letsencrypt
+
+    # Example: subdomain protected with basic auth
+    private:
+      rule: "Host(`private.example.com`)"
+      entryPoints:
+        - websecure
+      service: private
+      middlewares:
+        - basic-auth
+      tls:
+        certResolver: letsencrypt
+
+    # Example: redirect a host to an external URL
+    redirect-example:
+      rule: "Host(`old.example.com`)"
+      entryPoints:
+        - websecure
+      service: example
+      middlewares:
+        - external-redirect
+      tls:
+        certResolver: letsencrypt
+
+  services:
+    example:
+      loadBalancer:
+        servers:
+          - url: "http://192.168.1.100:8080"
+
+    example-api:
+      loadBalancer:
+        servers:
+          - url: "http://192.168.1.100:5000"
+
+    private:
+      loadBalancer:
+        servers:
+          - url: "http://192.168.1.100:9000"
+
+  middlewares:
+    # Redirect all matching traffic to an external URL
+    external-redirect:
+      redirectRegex:
+        regex: ".*"
+        replacement: "https://destination.example.com"
+        permanent: true
+
+    # HTTP basic auth — generate hashes with `htpasswd -nb user password`
+    basic-auth:
+      basicAuth:
+        users:
+          - 'user:REPLACE_WITH_HTPASSWD_HASH'
+
+    # Override Host header sent to the backend
+    custom-host:
+      headers:
+        customRequestHeaders:
+          Host: "backend.example.com"

@@ -1,26 +1,28 @@
 version: "3.7"
-networks:
-  default:
-    external: "${NETWORK_IS_EXTERNAL}"
-    name: "${NETWORK_NAME}"
+
 services:
   plex:
-    image: "linuxserver/plex"
+    image: "plexinc/pms-docker:latest"
     container_name: "plex"
     environment:
-      - "PUID=${ENVIRONMENT_PUID}"
-      - "PGID=${ENVIRONMENT_PGID}"
-      - "UMASK=022"
-      - "TZ=America/Los_Angeles"
-      - "VERSION=docker"
-      - "PLEX_CLAIM=${PLEX_CLAIM}"
+      - TZ=America/Los_Angeles
+      - PLEX_CLAIM=${PLEX_CLAIM}
+      - PLEX_UID=${PLEX_UID}
+      - PLEX_GID=${PLEX_GID}
     volumes:
       - "${VOLUME_ROOT}/plex/config:/config"
-      - "${VOLUME_ROOT}/plex/tv:/tv"
-      - "${MEDIA_ROOT}:/data"
-    devices:
-      - "/dev/dri:/dev/dri"
-    networks:
-      default:
-        ipv4_address: "${NETWORK_IPV4_ADDRESS}"
-    restart: "unless-stopped"
+      - "${VOLUME_ROOT}/nas_multimedia_kids:/media/kids"
+      - "${VOLUME_ROOT}/nas_multimedia_parents:/media/parents"
+    ports:
+      - "32400:32400"
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: all
+              capabilities: [gpu]
+    runtime: nvidia
+    restart: unless-stopped
+    labels:
+      - "com.centurylinklabs.watchtower.enable=true"

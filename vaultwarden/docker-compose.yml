@@ -1,0 +1,13 @@
+version: "3.8"
+
+services:
+  vaultwarden-1:
+    image: "vaultwarden/server:latest"
+    container_name: "${CONTAINER_NAME1}"
+    ports:
+      - "${PORT_HTTP1}:80"
+    volumes:
+      - "${VOLUME_ROOT}/vaultwarden/${CONTAINER_NAME1}/data:/data"
+    restart: "unless-stopped"
+    labels:
+      - "com.centurylinklabs.watchtower.enable=${LABEL_WATCHTOWER_ENABLE}"

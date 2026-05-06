@@ -1,0 +1,127 @@
+version: "3.8"
+
+services:
+  immich-server:
+    image: ghcr.io/immich-app/immich-server:release
+    container_name: immich-server
+    restart: unless-stopped
+    ports:
+      - "${PORT_IMMICH}:2283"
+    volumes:
+      - ${VOLUME_ROOT}/immich/upload:/usr/src/app/upload
+      - ${VOLUME_ROOT}/nas_multimedia:${VOLUME_ROOT}/nas_multimedia
+    environment:
+      - DB_URL=postgresql://immich:${IMMICH_DB_PASSWORD}@immich-db:5432/immich
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+      - IMMICH_APP_URL=${IMMICH_APP_URL}
+      - IMMICH_PROXY=${IMMICH_PROXY}
+      - TZ=${TIMEZONE}
+    depends_on:
+      immich-db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:2283/api/server/ping"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    labels:
+      - "com.centurylinklabs.watchtower.enable=${LABEL_WATCHTOWER_ENABLE}"
+
+  immich-microservices:
+    image: ghcr.io/immich-app/immich-server:release
+    container_name: immich-microservices
+    restart: unless-stopped
+    volumes:
+      - ${VOLUME_ROOT}/immich/upload:/usr/src/app/upload
+      - ${VOLUME_ROOT}/nas_multimedia:${VOLUME_ROOT}/nas_multimedia
+    environment:
+      - DB_URL=postgresql://immich:${IMMICH_DB_PASSWORD}@immich-db:5432/immich
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+      - TZ=${TIMEZONE}
+    depends_on:
+      immich-db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      immich-machine-learning:
+        condition: service_started
+    labels:
+      - "com.centurylinklabs.watchtower.enable=${LABEL_WATCHTOWER_ENABLE}"
+
+  immich-machine-learning:
+    image: ghcr.io/immich-app/immich-machine-learning:release-cuda
+    container_name: immich-ml
+    restart: unless-stopped
+    volumes:
+      - ${VOLUME_ROOT}/immich/upload:/usr/src/app/upload
+      - ${VOLUME_ROOT}/immich/cache:/cache
+    environment:
+      - DB_URL=postgresql://immich:${IMMICH_DB_PASSWORD}@immich-db:5432/immich
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+      - TZ=${TIMEZONE}
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities:
+                - gpu
+    depends_on:
+      immich-db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "test -f /proc/1/status || exit 1"]
+      interval: 10s
+      timeout: 10s
+      retries: 5
+      start_period: 30s
+    labels:
+      - "com.centurylinklabs.watchtower.enable=${LABEL_WATCHTOWER_ENABLE}"
+
+  immich-db:
+    image: pgvector/pgvector:pg15
+    container_name: immich-db
+    restart: unless-stopped
+    volumes:
+      - ${VOLUME_ROOT}/immich/db:/var/lib/postgresql/data
+    environment:
+      - POSTGRES_DB=immich
+      - POSTGRES_USER=immich
+      - POSTGRES_PASSWORD=${IMMICH_DB_PASSWORD}
+      - TZ=${TIMEZONE}
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U immich -d immich"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+
+  redis:
+    image: redis:7-alpine
+    container_name: immich-redis
+    restart: unless-stopped
+    command: redis-server --appendonly yes --maxmemory 256mb --maxmemory-policy noeviction
+    volumes:
+      - ${VOLUME_ROOT}/immich/redis:/data
+    environment:
+      - TZ=${TIMEZONE}
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+      start_period: 10s
+
+networks:
+  default:
+    name: immich-network
+    driver: bridge
